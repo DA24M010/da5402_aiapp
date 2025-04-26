@@ -1,0 +1,19 @@
+split:
+  seed: 42
+  train: 0.8 
+  val: 0.1
+  test: 0.1
+
+dataloader:
+  train_batch_size: 32
+  val_batch_size: 32
+  test_batch_size: 32
+  num_workers: 4
+  image_size: 120
+
+train:
+  epochs: 1
+  lr: 0.001
+  train_batch_size: 32
+  val_batch_size: 32
+  num_workers: 2
