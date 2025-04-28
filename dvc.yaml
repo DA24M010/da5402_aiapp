@@ -1,0 +1,15 @@
+stages:
+  ingest_data:
+    cmd: python ./scripts/ingest_data.py
+    deps:
+    - ./scripts/ingest_data.py
+    - new_data/
+    outs:
+    - data/
+  preprocess_data:
+    cmd: python ./scripts/preprocess_data.py
+    deps:
+    - ./scripts/preprocess_data.py
+    - data/
+    outs:
+    - processed_data/
