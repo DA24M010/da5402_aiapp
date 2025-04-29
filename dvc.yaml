@@ -1,15 +1,9 @@
 stages:
-  ingest_data:
-    cmd: python ./scripts/ingest_data.py
+  split_data:
+    cmd: python ./scripts/split_data.py
     deps:
-    - ./scripts/ingest_data.py
-    - new_data/
-    outs:
+    - ./scripts/split_data.py
     - data/
-  preprocess_data:
-    cmd: python ./scripts/preprocess_data.py
-    deps:
-    - ./scripts/preprocess_data.py
-    - data/
+    - params.yaml
     outs:
-    - processed_data/
+    - artifacts/metadata/
