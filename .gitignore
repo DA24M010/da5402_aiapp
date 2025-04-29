@@ -1,7 +1,7 @@
 artifactis/
 new_data/
 mlruns/
-/processed_data
 __pycache__/
 *.pyc
 ./services/postgres_data
+/logs
