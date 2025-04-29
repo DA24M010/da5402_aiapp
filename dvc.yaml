@@ -1,9 +1,42 @@
 stages:
-  split_data:
-    cmd: python ./scripts/split_data.py
+  preprocess_data:
+    cmd: python ./scripts/pipeline/preprocess_data.py
     deps:
-    - ./scripts/split_data.py
-    - data/
+    - ./data/raw_data
+    - ./scripts/pipeline/preprocess_data.py
     - params.yaml
     outs:
-    - artifacts/metadata/
+    - ./logs
+    - ./data/processed_data
+  split_data:
+    cmd: python ./scripts/pipeline/split_data.py
+    deps:
+    - ./scripts/pipeline/split_data.py
+    - ./data/processed_data
+    - params.yaml
+    outs:
+    - ./artifacts/metadata/
+  train_model:
+    cmd: python ./scripts/pipeline/train.py
+    deps:
+    - ./scripts/pipeline/cnnmodel.py
+    - ./scripts/pipeline/load_dataset.py
+    - ./scripts/pipeline/train.py
+    - ./artifacts/metadata
+    - params.yaml
+    outs:
+    - ./artifacts/model.pth
+    - ./artifacts/metrics/confusion_matrix_train.png
+    - ./artifacts/metrics/confusion_matrix_val.png
+    - ./artifacts/run_id.txt
+  evaluate_model:
+    cmd: python ./scripts/pipeline/evaluate.py
+    deps:
+    - ./artifacts/model.pth 
+    - ./artifacts/metadata/test.csv
+    - ./artifacts/run_id.txt  
+    - params.yaml 
+    outs:
+    - ./artifacts/metrics/confusion_matrix_test.png 
+    metrics:
+    - ./artifacts/metrics/metrics.json

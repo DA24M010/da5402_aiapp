@@ -4,7 +4,6 @@ import torch
 from torch.utils.data import Dataset, DataLoader
 from torchvision import transforms
 from PIL import Image
-import yaml
 
 class CrackDataset(Dataset):
     def __init__(self, csv_file, transform=None):
@@ -21,22 +20,13 @@ class CrackDataset(Dataset):
             image = self.transform(image)
         return image, row["label"]
 
-def load_params():
-    with open("params.yaml") as f:
-        return yaml.safe_load(f)
-
-def load_dataloaders(metadata_path = 'artifacts/metadata'):
-    params = load_params()
+def load_dataloaders(metadata_path = 'artifacts/metadata', train_batch_size = 32, val_batch_size = 32, test_batch_size = 1, num_workers = 4):
     batch_sizes = {
-        "train": params["dataloader"]["train_batch_size"],
-        "val": params["dataloader"]["val_batch_size"],
-        "test": params["dataloader"]["test_batch_size"]
+        'train' : train_batch_size,
+        'val' : val_batch_size, 
+        'test' : test_batch_size
     }
-    num_workers = params["dataloader"]["num_workers"]
-    image_size = params["dataloader"].get("image_size", 224)
-
     transform = transforms.Compose([
-        transforms.Resize((image_size, image_size)),
         transforms.ToTensor(),
         transforms.Normalize([0.485, 0.456, 0.406],
                              [0.229, 0.224, 0.225])

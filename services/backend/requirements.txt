@@ -1,0 +1,10 @@
+fastapi
+uvicorn
+--extra-index-url https://download.pytorch.org/whl/cpu
+torch
+torchvision
+Pillow
+python-multipart
+requests
+prometheus_client
+psycopg2-binary

@@ -1,32 +1,50 @@
-import matplotlib.pyplot as plt
-import torchvision.transforms as transforms
-from PIL import Image
-from load_dataset import load_dataloaders
+import os
+import psycopg2
+import base64
+from datetime import datetime
 
-def show_samples(loader, num_samples=5):
-    # Show `num_samples` images from the DataLoader
-    for i, (images, labels) in enumerate(loader):
-        if i == num_samples:
-            break
-        
-        for j in range(images.size(0)):
-            img = images[j].permute(1, 2, 0).numpy()  # Convert to HxWxC format for plotting
-            label = labels[j].item()
+from dotenv import load_dotenv
 
-            plt.imshow(img)
-            plt.title(f"Label: {label}")
-            plt.axis('off')
-            plt.show()
+# Load variables from .env file
+load_dotenv()
+
+def extract_and_save_images():
+    try:
+        connection = psycopg2.connect(
+            host=os.environ.get("POSTGRES_HOST", "postgres"),
+            port=os.environ.get("POSTGRES_PORT", "5432"),
+            database=os.environ.get("POSTGRES_DB", "your_database_name"),
+            user=os.environ.get("POSTGRES_USER", "your_user"),
+            password=os.environ.get("POSTGRES_PASSWORD", "your_password")
+        )
+
+        cursor = connection.cursor()
+        cursor.execute("SELECT id, image_data, label, timestamp FROM feedback_images LIMIT 5;")
+        rows = cursor.fetchall()
+
+        output_dir = "extracted_images"
+        os.makedirs(output_dir, exist_ok=True)
+
+        for row in rows:
+            img_id, image_data, label, ts = row
+            filename = f"{output_dir}/image_{img_id}_{label}_{ts.strftime('%Y%m%d%H%M%S')}.jpg"
+
+            # If image_data is base64-encoded string, decode it
+            if isinstance(image_data, str):
+                img_bytes = base64.b64decode(image_data)
+            else:
+                img_bytes = image_data  # assume it's raw bytes (bytea in Postgres)
+
+            with open(filename, "wb") as f:
+                f.write(img_bytes)
+            print(f"Saved: {filename}")
+
+    except Exception as e:
+        print(f"Error during extraction: {e}")
+
+    finally:
+        if 'connection' in locals():
+            connection.close()
 
 if __name__ == "__main__":
-    # Load the DataLoader objects
-    loaders = load_dataloaders()
-
-    print("[INFO] Showing samples from train DataLoader...")
-    show_samples(loaders["train"], num_samples=3)
-
-    print("[INFO] Showing samples from val DataLoader...")
-    show_samples(loaders["val"], num_samples=3)
-
-    print("[INFO] Showing samples from test DataLoader...")
-    show_samples(loaders["test"], num_samples=3)
+    extract_and_save_images()

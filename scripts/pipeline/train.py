@@ -1,12 +1,10 @@
 import torch
 import torch.optim as optim
 import torch.nn as nn
-from torch.utils.data import DataLoader
 import mlflow
 import mlflow.pytorch
 from load_dataset import load_dataloaders
 from cnnmodel import CNNModel
-import yaml
 from tqdm import tqdm 
 import json  
 from sklearn.metrics import precision_score, recall_score, f1_score, confusion_matrix
@@ -14,16 +12,28 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 import numpy as np
 from utils import load_params, plot_confusion_matrix
+import mlflow
+from mlflow.tracking import MlflowClient
+from mlflow.models.signature import infer_signature
 
 def train_model():
     # Load parameters
     params = load_params()
+    dataloader_params = params["dataloader"]
     train_params = params["train"]
-    
+
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
+    batch_sizes = {
+        "train": dataloader_params["train_batch_size"],
+        "val": dataloader_params["val_batch_size"]
+    }
+    num_workers = params["dataloader"]["num_workers"]
+    image_size = params["dataloader"].get("image_size", 224)
+
+
     # Load DataLoader from saved file
-    dataloaders = load_dataloaders("artifacts/metadata/")
+    dataloaders = load_dataloaders("artifacts/metadata/", batch_sizes["train"], batch_sizes["val"], num_workers)
     train_loader = dataloaders["train"]
     val_loader = dataloaders["val"]
     # test_loader = dataloaders["test"]
@@ -47,7 +57,6 @@ def train_model():
 
         mlflow.log_params(train_params)
 
-        best_val_acc = 0.0
         for epoch in range(train_params["epochs"]):
             model.train()
             running_loss = 0.0
@@ -140,11 +149,7 @@ def train_model():
                   f"Val Loss: {val_loss:.4f}, Val Acc: {val_accuracy:.4f} | "
                   f"Precision: {val_precision:.4f}, Recall: {val_recall:.4f}, F1: {val_f1:.4f}")
 
-            # Save the model if validation accuracy improves
-            if val_accuracy > best_val_acc:
-                best_val_acc = val_accuracy
-                mlflow.pytorch.log_model(model, "model")
-
+                
         # Final metrics for JSON
         final_metrics = {
             "train_loss": train_loss,
@@ -158,6 +163,30 @@ def train_model():
             "val_recall": val_recall,
             "val_f1_score": val_f1
         }
+
+        sample_input = images.to(device)[:1]  # Single sample
+        model.eval()
+        with torch.no_grad():
+            sample_output = model(sample_input)
+
+        signature = infer_signature(sample_input.cpu().numpy(), sample_output.cpu().numpy())
+
+        mlflow.pytorch.log_model(model, "model", signature=signature)
+        result = mlflow.register_model(
+            model_uri=f"runs:/{mlflow.active_run().info.run_id}/model",
+            name="surface_crack_detector"  
+        )
+        print(f"Registered model version: {result.version}")
+
+        client = MlflowClient()
+        client.transition_model_version_stage(
+            name="surface_crack_detector",
+            version=result.version,
+            stage="Production"
+        )
+        print(f"Model version {result.version} promoted to Production.")
+
+        torch.save(model, './artifacts/model.pth')
 
         # Save final metrics to JSON file
         with open("artifacts/metrics/metrics.json", "w") as f:

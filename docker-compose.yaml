@@ -1,0 +1,73 @@
+version: '3.9'
+
+services:
+  postgres:
+    image: postgres:latest
+    environment:
+      POSTGRES_USER: mohit
+      POSTGRES_PASSWORD: mohit
+      POSTGRES_DB: feedback
+    volumes:
+      - ./services/postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    networks:
+      - app-network
+
+
+  backend:
+    build: ./services/backend
+    ports:
+      - "8000:8000"
+    restart: always
+    environment:
+      - POSTGRES_HOST=postgres  
+      - POSTGRES_PORT=5432
+      - POSTGRES_DB=feedback
+      - POSTGRES_USER=mohit
+      - POSTGRES_PASSWORD=mohit
+      - MLFLOW_MODEL_SERVER_URL=http://host.docker.internal:5001/invocations
+      - DATABASE_URL=postgresql://mohit:mohit@postgres:5432/feedback
+
+    networks:
+      - app-network
+   
+  frontend:
+    build: ./services/frontend
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend  # make sure frontend waits for backend
+    restart: always
+    networks:
+      - app-network
+
+
+  prometheus:
+    image: prom/prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./services/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+    networks:
+      - app-network
+
+  grafana:
+    image: grafana/grafana
+    ports:
+      - "3001:3000"
+    networks:
+      - app-network
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=mohit1234
+
+  node_exporter:
+    image: prom/node-exporter
+    ports:
+      - "9100:9100"
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge

@@ -1,7 +1,6 @@
 import torch
 import torch.nn as nn
 from load_dataset import load_dataloaders
-from cnnmodel import CNNModel
 import mlflow
 import mlflow.pytorch
 import yaml
@@ -11,17 +10,20 @@ from sklearn.metrics import precision_score, recall_score, f1_score, confusion_m
 import seaborn as sns
 import matplotlib.pyplot as plt
 import numpy as np
+# from scripts.pipeline.utils import plot_confusion_matrix
 from utils import load_params, plot_confusion_matrix
 
 def evaluate_model():
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
+    params = load_params()
+    eval_params = params["evaluate"]
     # Load DataLoader
-    dataloaders = load_dataloaders("artifacts/metadata/")
+    dataloaders = load_dataloaders("./artifacts/metadata/", test_batch_size=eval_params["test_batch_size"])
     test_loader = dataloaders["test"]
 
     # Read saved run_id
-    with open("artifacts/run_id.txt", "r") as f:
+    with open("./artifacts/run_id.txt", "r") as f:
         run_id = f.read().strip()
 
     # Load model from MLflow

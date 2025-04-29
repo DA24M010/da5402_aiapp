@@ -1,12 +1,20 @@
 import os
-import random
 from pathlib import Path
 import pandas as pd
 import matplotlib.pyplot as plt
 from PIL import Image
 
-def load_metadata(metadata_path):
-    return pd.read_csv(metadata_path)
+def build_metadata_from_folder(raw_data_dir):
+    data = []
+    for label_str, label_num in [("positive", 1), ("negative", 0)]:
+        folder = raw_data_dir / label_str
+        if not folder.exists():
+            print(f"[WARN] Folder not found: {folder}")
+            continue
+        for img_path in folder.glob("*"):
+            if img_path.is_file():
+                data.append({"path": str(img_path), "label": label_num})
+    return pd.DataFrame(data)
 
 def get_image_dimensions(df):
     widths, heights = [], []
@@ -67,13 +75,12 @@ def save_eda_report(stats, report_path):
         for key, value in stats.items():
             f.write(f"{key}: {value}\n")
 
-def main():
-    metadata_path = "artifacts/metadata/train.csv"
-    artifact_dir = Path("artifacts/eda")
+def generate_eda(DATA_DIR):
+    artifact_dir = Path("./artifacts/eda")
     artifact_dir.mkdir(parents=True, exist_ok=True)
 
-    print("[INFO] Loading metadata...")
-    df = load_metadata(metadata_path)
+    print("[INFO] Building metadata from raw_data folder...")
+    df = build_metadata_from_folder(DATA_DIR)
 
     class_counts = df["label"].value_counts().to_dict()
     stats = {
@@ -85,12 +92,17 @@ def main():
 
     print("[INFO] Calculating image dimensions...")
     widths, heights = get_image_dimensions(df)
-    stats["Avg Width"] = sum(widths) // len(widths)
-    stats["Avg Height"] = sum(heights) // len(heights)
-    stats["Min Width"] = min(widths)
-    stats["Max Width"] = max(widths)
-    stats["Min Height"] = min(heights)
-    stats["Max Height"] = max(heights)
+    if widths:
+        stats.update({
+            "Avg Width": sum(widths) // len(widths),
+            "Avg Height": sum(heights) // len(heights),
+            "Min Width": min(widths),
+            "Max Width": max(widths),
+            "Min Height": min(heights),
+            "Max Height": max(heights),
+        })
+    else:
+        print("[WARN] No image sizes extracted.")
 
     print("[INFO] Saving plots...")
     plot_class_distribution(df, artifact_dir / "class_distribution.png")
@@ -100,7 +112,4 @@ def main():
     print("[INFO] Saving EDA report...")
     save_eda_report(stats, artifact_dir / "eda_report.txt")
 
-    print("[DONE] EDA stage completed.")
-
-if __name__ == "__main__":
-    main()
+    print("[DONE] EDA from folder completed.")

@@ -40,7 +40,7 @@ def split_and_save(df, output_dir, seed=42):
     print(f"[OK] Saved {len(train_df)} train, {len(val_df)} val, {len(test_df)} test samples.")
 
 def main():
-    data_dir = "data"
+    data_dir = "data/processed_data"
     output_dir = "artifacts/metadata"
 
     print("[INFO] Gathering image paths...")
