@@ -5,19 +5,38 @@ import shutil
 from pathlib import Path
 from dotenv import load_dotenv
 from datetime import datetime
+import logging
 
 load_dotenv()
 
-def move_feedback_data(DATA_DIR, conn=None, limit = 100):
+# Set up logging
+LOG_DIR = Path("./logs")
+LOG_DIR.mkdir(exist_ok=True)
+log_file = LOG_DIR / "ingest.log"
+
+logging.basicConfig(
+    filename=log_file,
+    level=logging.INFO,
+    format="%(asctime)s - %(levelname)s - %(message)s",
+)
+
+# Also log to console
+console = logging.StreamHandler()
+console.setLevel(logging.INFO)
+formatter = logging.Formatter("%(asctime)s - %(levelname)s - %(message)s")
+console.setFormatter(formatter)
+logging.getLogger("").addHandler(console)
+
+def move_feedback_data(DATA_DIR, conn=None, limit=100):
     if conn is None:
-        print("[WARN] No DB connection provided, skipping feedback fetch.")
+        logging.warning("No DB connection provided, skipping feedback fetch.")
         return False
 
     moved = False
     try:
         positive_dir = DATA_DIR / "positive"
         negative_dir = DATA_DIR / "negative"
-        
+
         cur = conn.cursor()
         cur.execute(f"""
             SELECT id, image_data, label, timestamp
@@ -28,7 +47,7 @@ def move_feedback_data(DATA_DIR, conn=None, limit = 100):
         rows = cur.fetchall()
 
         if len(rows) < limit:
-            print(f"[INFO] Only {len(rows)} feedback entries found. Skipping.")
+            logging.info(f"Only {len(rows)} feedback entries found. Skipping.")
             return False
 
         ids_to_delete = []
@@ -47,7 +66,7 @@ def move_feedback_data(DATA_DIR, conn=None, limit = 100):
             elif label == 1:
                 out_path = positive_dir / file_name
             else:
-                print(f"[SKIP] Invalid label: {label} for row ID: {row_id}")
+                logging.warning(f"Invalid label: {label} for row ID: {row_id}")
                 continue
 
             with open(out_path, "wb") as f:
@@ -58,11 +77,12 @@ def move_feedback_data(DATA_DIR, conn=None, limit = 100):
         if ids_to_delete:
             cur.execute("DELETE FROM feedback_images WHERE id IN %s", (tuple(ids_to_delete),))
             conn.commit()
-            print(f"[INFO] Moved and deleted {len(ids_to_delete)} entries from feedback_images.")
+            logging.info(f"Moved and deleted {len(ids_to_delete)} entries from feedback_images.")
 
     except Exception as e:
-        print(f"[ERROR] While moving feedback data: {e}")
+        logging.error(f"Error while moving feedback data: {e}", exc_info=True)
     finally:
         if conn:
             cur.close()
+
     return moved

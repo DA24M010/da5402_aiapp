@@ -1,7 +1,19 @@
 import os
 import psycopg2
+import subprocess
 from dotenv import load_dotenv
 from ingestion_pipeline.run_ingest import ingest_data
+from time import sleep
+import logging
+import traceback
+
+# Setup logging
+os.makedirs("logs", exist_ok=True)
+logging.basicConfig(
+    filename="logs/model_rebuild.log",
+    level=logging.INFO,
+    format="%(asctime)s - %(levelname)s - %(message)s"
+)
 
 # Load environment variables
 load_dotenv()
@@ -27,6 +39,7 @@ def connect_db():
 
 def check_and_ingest():
     conn = None
+    cur = None
     try:
         conn = connect_db()
         cur = conn.cursor()
@@ -34,20 +47,40 @@ def check_and_ingest():
         # Count how many feedback entries are available
         cur.execute("SELECT COUNT(*) FROM feedback_images;")
         count = cur.fetchone()[0]
-        print(f"[INFO] Found {count} feedback entries in DB")
+        logging.info(f"Found {count} feedback entries in DB")
 
         if count >= FEEDBACK_MOVE_LIMIT:
-            print(f"[INFO] Threshold of {FEEDBACK_MOVE_LIMIT} reached, triggering ingestion...")
-            ingest_data(conn, FEEDBACK_MOVE_LIMIT)  # Call the separate ingestion logic using the open connection
+            logging.info(f"Threshold of {FEEDBACK_MOVE_LIMIT} reached, triggering ingestion...")
+            ingest_data(conn, FEEDBACK_MOVE_LIMIT)
+            logging.info("Data ingestion complete. Running dvc repro...")
+
+            env = os.environ.copy()
+            env["MKL_SERVICE_FORCE_INTEL"] = "1"
+
+            subprocess.run(["dvc", "repro"], check=True, env=env)
+            logging.info("dvc repro complete. Stopping old MLflow serve and starting new serve.")
+
+            subprocess.run("pkill -f 'mlflow models serve'", shell=True)
+            sleep(2)
+
+            subprocess.Popen([
+                "mlflow", "models", "serve", 
+                "-m", "models:/surface_crack_detector/Production", 
+                "--host", "0.0.0.0", "-p", "5001", "--no-conda"
+            ])
+            logging.info("New MLflow model serving started.")
         else:
-            print("[INFO] Not enough feedback entries to process.")
+            logging.info(f"Not enough feedback entries to process. Current count: {count}")
 
     except Exception as e:
-        print(f"[ERROR] Could not check feedback entries: {e}")
+        logging.error(f"Error during ingestion and model rebuild: {str(e)}")
+        logging.error(traceback.format_exc())
     finally:
-        if conn:
+        if cur:
             cur.close()
+        if conn:
             conn.close()
+            logging.info("Database connection closed.")
 
 
 if __name__ == "__main__":

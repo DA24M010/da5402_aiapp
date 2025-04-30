@@ -12,8 +12,16 @@ import torchvision.transforms as transforms
 import os
 from prometheus_client import Counter, generate_latest, CONTENT_TYPE_LATEST
 from create_feedback_table import create_feedback_table
+from prometheus_fastapi_instrumentator import Instrumentator
 
 app = FastAPI()
+
+Instrumentator(
+    should_group_status_codes=True,
+    should_ignore_untemplated=True,
+    should_respect_env_var=True,
+    env_var_name="ENABLE_METRICS",
+).instrument(app).expose(app, include_in_schema=False)
 
 @app.on_event("startup")
 async def startup_event():
@@ -40,6 +48,7 @@ MLFLOW_MODEL_SERVER_URL = os.getenv("MLFLOW_MODEL_SERVER_URL")
 REQUEST_COUNT = Counter('inference_requests_total', 'Total number of inference requests')
 SUCCESSFUL_PREDICTIONS = Counter('successful_predictions_total', 'Successful predictions')
 FAILED_PREDICTIONS = Counter('failed_predictions_total', 'Failed predictions')
+FEEDBACKS = Counter('feedbacks_total', 'Feedbacks')
 
 
 # Prediction function
@@ -67,7 +76,7 @@ def predict_image(image):
         # Assuming the model outputs a single probability
         return int(preds[0][0] > 0.5)
     else:
-        FAILED_PREDICTIONS.inc()
+        # FAILED_PREDICTIONS.inc()
         raise Exception(f"MLflow server error: {response.text}")
 
 # Decode base64 image
@@ -90,6 +99,7 @@ async def predict(request: PredictionRequest):
 DB_URI = os.getenv("DATABASE_URL")
 @app.post("/feedback/")
 async def feedback(request: FeedbackRequest):
+    FEEDBACKS.inc()
     save_feedback_image(request.image, request.correct_label, DB_URI)
     return {"message": "Feedback received!"}
 

@@ -37,7 +37,7 @@ services:
     ports:
       - "3000:3000"
     depends_on:
-      - backend  # make sure frontend waits for backend
+      - backend  
     restart: always
     networks:
       - app-network
@@ -60,6 +60,8 @@ services:
       - app-network
     environment:
       - GF_SECURITY_ADMIN_PASSWORD=mohit1234
+    volumes:
+      - ./services/grafana_data:/var/lib/grafana
 
   node_exporter:
     image: prom/node-exporter
