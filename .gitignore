@@ -5,3 +5,5 @@ __pycache__/
 *.pyc
 ./services/postgres_data
 /logs
+./services/grafana_data
+./services/postgres_data
