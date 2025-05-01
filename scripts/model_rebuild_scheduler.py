@@ -8,9 +8,9 @@ import logging
 import traceback
 
 # Setup logging
-os.makedirs("logs", exist_ok=True)
+os.makedirs("./logs", exist_ok=True)
 logging.basicConfig(
-    filename="logs/model_rebuild.log",
+    filename="./logs/model_rebuild.log",
     level=logging.INFO,
     format="%(asctime)s - %(levelname)s - %(message)s"
 )

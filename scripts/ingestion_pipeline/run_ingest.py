@@ -14,7 +14,7 @@ from ingestion_pipeline.data_eda import generate_eda
 # Set up logging
 LOG_DIR = Path("./logs")
 LOG_DIR.mkdir(exist_ok=True)
-log_file = LOG_DIR / "ingest.log"
+log_file = LOG_DIR / "model_rebuild.log"
 
 logging.basicConfig(
     filename=log_file,

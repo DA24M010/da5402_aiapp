@@ -4,6 +4,10 @@ from PIL import Image
 import torch
 import torchvision.transforms as transforms
 
+import base64
+import psycopg2
+from datetime import datetime
+
 # Define image transforms
 image_size = 120
 transform = transforms.Compose([
@@ -27,9 +31,6 @@ def decode_base64_image(base64_string):
     img = Image.open(io.BytesIO(image_bytes)).convert('RGB')
     return img
 
-import base64
-import psycopg2
-from datetime import datetime
 
 def save_feedback_image(base64_string, label, db_url):
 # def save_feedback_image(base64_string, label, save_dir="./artifacts/feedback/"):

@@ -6,7 +6,7 @@ stages:
     - ./scripts/pipeline/preprocess_data.py
     - params.yaml
     outs:
-    - ./logs
+    - ./logs/train_pipeline.log
     - ./data/processed_data
   split_data:
     cmd: python ./scripts/pipeline/split_data.py
@@ -29,6 +29,7 @@ stages:
     - ./artifacts/metrics/confusion_matrix_train.png
     - ./artifacts/metrics/confusion_matrix_val.png
     - ./artifacts/run_id.txt
+
   evaluate_model:
     cmd: python ./scripts/pipeline/evaluate.py
     deps:

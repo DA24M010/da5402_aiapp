@@ -68,7 +68,8 @@ def load_dataloaders(metadata_path='artifacts/metadata', train_batch_size=32, va
                 dataset,
                 batch_size=batch_sizes[split],
                 shuffle=(split == "train"),
-                num_workers=num_workers
+                num_workers=num_workers,
+                drop_last=True
             )
             logging.info(f"{split.title()} DataLoader created with batch size {batch_sizes[split]}")
 

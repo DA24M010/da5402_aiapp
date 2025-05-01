@@ -5,9 +5,9 @@ stages:
     deps:
     - path: ./data/raw_data
       hash: md5
-      md5: de29854f5dd86de18c753d26ac46f672.dir
-      size: 245551841
-      nfiles: 40014
+      md5: 75905f20f0c20638a1bcdfbedd9d9692.dir
+      size: 61448808
+      nfiles: 10006
     - path: ./scripts/pipeline/preprocess_data.py
       hash: md5
       md5: 69551a90b68ffa70ee67a31845943457
@@ -19,22 +19,21 @@ stages:
     outs:
     - path: ./data/processed_data
       hash: md5
-      md5: d382b99e8fff4135c302feb6307fc79e.dir
-      size: 100996910
-      nfiles: 40014
-    - path: ./logs
+      md5: 8ce52e21acf41739f81490010730441a.dir
+      size: 25283710
+      nfiles: 10006
+    - path: ./logs/train_pipeline.log
       hash: md5
-      md5: 773a514436eae867b3f39d7346a2fb9a.dir
+      md5: defde25e984305a61f6c7e81f42c9375
       size: 249
-      nfiles: 1
   split_data:
     cmd: python ./scripts/pipeline/split_data.py
     deps:
     - path: ./data/processed_data
       hash: md5
-      md5: d382b99e8fff4135c302feb6307fc79e.dir
-      size: 100996910
-      nfiles: 40014
+      md5: 8ce52e21acf41739f81490010730441a.dir
+      size: 25283710
+      nfiles: 10006
     - path: ./scripts/pipeline/split_data.py
       hash: md5
       md5: 93347f75cd9f2b5173010ab9fa96015c
@@ -46,16 +45,16 @@ stages:
     outs:
     - path: ./artifacts/metadata/
       hash: md5
-      md5: 321ac087f42b46089b926f5d3be5cda0.dir
-      size: 1659603
+      md5: 20131a97c2437571800a7f91bec6ffa3.dir
+      size: 415041
       nfiles: 3
   train_model:
     cmd: python ./scripts/pipeline/train.py
     deps:
     - path: ./artifacts/metadata
       hash: md5
-      md5: 321ac087f42b46089b926f5d3be5cda0.dir
-      size: 1659603
+      md5: 20131a97c2437571800a7f91bec6ffa3.dir
+      size: 415041
       nfiles: 3
     - path: ./scripts/pipeline/cnnmodel.py
       hash: md5
@@ -63,8 +62,8 @@ stages:
       size: 1639
     - path: ./scripts/pipeline/load_dataset.py
       hash: md5
-      md5: 9515ebcefe8a769dc65d47aafc916f1e
-      size: 2594
+      md5: 2454c57a5b6587bbd443eeb5c1c38732
+      size: 2626
     - path: ./scripts/pipeline/train.py
       hash: md5
       md5: 886c5618601b6098fce0f59757315780
@@ -76,34 +75,34 @@ stages:
     outs:
     - path: ./artifacts/metrics/confusion_matrix_train.png
       hash: md5
-      md5: 97b0aa515b1fe6a6a81c0da0be773ab9
-      size: 25472
+      md5: ad9305cf93f582f19aac396fcf1b6214
+      size: 24592
     - path: ./artifacts/metrics/confusion_matrix_val.png
       hash: md5
-      md5: 77ff7a339af1563ab471a35a69b42c6e
-      size: 23087
+      md5: 6fef7ae6ff9176fdc55a36c59afe4128
+      size: 20093
     - path: ./artifacts/model.pth
       hash: md5
-      md5: fdcb7e2a3abd3a99d9cdcd06add99e60
+      md5: 8d03d8b48480f08e12b4891336abf15a
       size: 29955651
     - path: ./artifacts/run_id.txt
       hash: md5
-      md5: 4044f1e2f3b3c9688619bbdfb7d1f8d9
+      md5: c349faecf3d603e59ef0b1dca19fe1f6
       size: 32
   evaluate_model:
     cmd: python ./scripts/pipeline/evaluate.py
     deps:
     - path: ./artifacts/metadata/test.csv
       hash: md5
-      md5: b0b6671613341ef42db1b7b6a1526021
-      size: 165975
+      md5: a83c2da9131dc12efbca09a9694bf987
+      size: 41524
     - path: ./artifacts/model.pth
       hash: md5
-      md5: fdcb7e2a3abd3a99d9cdcd06add99e60
+      md5: 8d03d8b48480f08e12b4891336abf15a
       size: 29955651
     - path: ./artifacts/run_id.txt
       hash: md5
-      md5: 4044f1e2f3b3c9688619bbdfb7d1f8d9
+      md5: c349faecf3d603e59ef0b1dca19fe1f6
       size: 32
     - path: params.yaml
       hash: md5
@@ -112,9 +111,9 @@ stages:
     outs:
     - path: ./artifacts/metrics/confusion_matrix_test.png
       hash: md5
-      md5: 6fd590c557e8b513a4b1bb7c06647103
-      size: 23201
+      md5: 90c9a96703cde0e5b254cac69671cfb6
+      size: 20102
     - path: ./artifacts/metrics/metrics.json
       hash: md5
-      md5: 8e56d35c31ea8760dbf161e99cdeb4a9
-      size: 202
+      md5: e597938250c185d98138533644aa4d54
+      size: 203
