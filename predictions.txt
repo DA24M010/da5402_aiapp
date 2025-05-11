@@ -1,0 +1,8 @@
+Image: 00631.jpg, Prediction: Positive, Raw Prediction Value: 0.9345231652259827
+Image: 00072.jpg, Prediction: Negative, Raw Prediction Value: 0.00183344807010144
+Image: 00227.jpg, Prediction: Positive, Raw Prediction Value: 0.9781227707862854
+Image: 00791.jpg, Prediction: Negative, Raw Prediction Value: 0.0038774232380092144
+Image: 00568.jpg, Prediction: Positive, Raw Prediction Value: 0.9958667755126953
+Image: 00853.jpg, Prediction: Negative, Raw Prediction Value: 0.0010526017285883427
+Image: 00549.jpg, Prediction: Positive, Raw Prediction Value: 0.9999089241027832
+Image: 00822.jpg, Prediction: Negative, Raw Prediction Value: 0.0034294934011995792

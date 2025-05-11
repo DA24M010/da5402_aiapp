@@ -1,0 +1,10 @@
+torch
+torchvision
+Pillow
+psycopg2-binary
+kagglehub
+scikit-learn
+mlflow
+matplotlib
+opencv-python
+requests
